@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Painel Pessoal
 
-## Getting Started
+Dashboard pessoal com plano alimentar gerado via API da Anthropic. Next.js 14, autenticação JWT, pronto para deploy no Vercel.
 
-First, run the development server:
+## Stack
+
+- **Next.js 14** — App Router + API Routes
+- **Anthropic SDK** — plano alimentar gerado por IA
+- **jose** — JWT para autenticação
+- **Tailwind CSS** — estilo utilitário
+
+---
+
+## Setup local
+
+### 1. Instalar dependências
+
+```bash
+npm install
+```
+
+### 2. Criar o arquivo de variáveis
+
+```bash
+cp .env.example .env.local
+```
+
+Editar `.env.local`:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...        # Chave da Anthropic Console
+DASHBOARD_PASSWORD=sua-senha-forte  # Senha de acesso ao painel
+AUTH_SECRET=                        # Gerar com: openssl rand -base64 32
+```
+
+### 3. Rodar em desenvolvimento
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse `http://localhost:3000` — vai redirecionar para `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Deploy no Vercel
 
-## Learn More
+### 1. Criar repositório no GitHub e fazer push
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+git init
+git add .
+git commit -m "init"
+git remote add origin https://github.com/SEU_USUARIO/painel-pessoal.git
+git push -u origin main
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. Importar no Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. Acesse [vercel.com](https://vercel.com) → **Add New Project**
+2. Selecione o repositório
+3. Em **Environment Variables**, adicione as três variáveis:
+   - `ANTHROPIC_API_KEY`
+   - `DASHBOARD_PASSWORD`
+   - `AUTH_SECRET`
+4. Clique em **Deploy**
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Como atualizar o plano
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+O plano é gerado pela API da Anthropic automaticamente. Há cache de 6 horas — o mesmo plano não é regenerado a cada visita.
+
+Para forçar regeneração:
+- No dashboard, clique no botão **"Regenerar plano"**
+- Ou faça `POST /api/meal-plan` diretamente
+
+Para alterar as restrições e preferências alimentares, edite o `SYSTEM_PROMPT` em:
+```
+src/app/api/meal-plan/route.ts
+```
+
+---
+
+## Adicionar novas seções
+
+O dashboard tem sidebar expansível. Para adicionar uma seção (ex: treino, medicamentos, peso):
+
+1. Crie a página em `src/app/dashboard/NOME/page.tsx`
+2. Adicione a API em `src/app/api/NOME/route.ts` (se necessário)
+3. Descomente/adicione a entrada no array `NAV` em `src/app/dashboard/layout.tsx`
