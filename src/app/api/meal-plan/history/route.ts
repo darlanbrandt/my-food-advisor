@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // Retorna todos os planos salvos (sem o plan_data completo — só metadados)
 export async function GET() {
   const { data, error } = await supabase
