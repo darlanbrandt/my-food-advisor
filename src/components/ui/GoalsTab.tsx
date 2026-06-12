@@ -1,5 +1,8 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import { ptBR } from 'date-fns/locale'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 export type Goal   = { id: string; name: string }
@@ -106,6 +109,31 @@ function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; conf
   )
 }
 
+
+function DatePickerField({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string
+  onChange: (isoDate: string) => void
+  ariaLabel: string
+}) {
+  return (
+    <DatePicker
+      selected={parse(value)}
+      onChange={date => {
+        if (date) onChange(iso(date as Date))
+      }}
+      dateFormat="dd/MM/yyyy"
+      locale={ptBR}
+      ariaLabelledBy={ariaLabel}
+      className="date-input"
+      showPopperArrow={false}
+    />
+  )
+}
+
 /* ── card de um período ─────────────────────────────────────── */
 function PeriodCard({
   period,
@@ -193,13 +221,17 @@ function PeriodCard({
           <EditableText className="period-name" value={period.name}
             onSave={v => onChange(p => ({ ...p, name: v }))} />
           <div className="period-dates">
-            <input type="date" className="date-input" value={period.start_date}
-              max="2099-12-31" aria-label="Data de início"
-              onChange={e => setStartDate(e.target.value)} />
+            <DatePickerField
+              value={period.start_date}
+              ariaLabel="Data de início"
+              onChange={setStartDate}
+            />
             <span className="date-sep">→</span>
-            <input type="date" className="date-input" value={period.end_date}
-              max="2099-12-31" aria-label="Data de término"
-              onChange={e => setEndDate(e.target.value)} />
+            <DatePickerField
+              value={period.end_date}
+              ariaLabel="Data de término"
+              onChange={setEndDate}
+            />
             <span className="period-meta">{totalDays} dias</span>
           </div>
         </div>
