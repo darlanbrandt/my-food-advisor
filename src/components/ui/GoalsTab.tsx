@@ -1,8 +1,5 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
-import { ptBR } from 'date-fns/locale'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 export type Goal   = { id: string; name: string }
@@ -92,6 +89,111 @@ function EditableText({ value, onSave, className }: { value: string; onSave: (v:
   )
 }
 
+/* ── calendar picker customizado ────────────────────────────── */
+const MONTHS_LONG = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
+                     'Agosto','Setembro','Outubro','Novembro','Dezembro']
+
+function CalendarPicker({ value, onChange, ariaLabel }: {
+  value: string; onChange: (v: string) => void; ariaLabel: string
+}) {
+  const selected  = value ? parse(value) : null
+  const [open, setOpen] = useState(false)
+  const [view, setView] = useState(() => {
+    const d = value ? parse(value) : today()
+    return new Date(d.getFullYear(), d.getMonth(), 1)
+  })
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  // fecha ao clicar fora
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  // fecha com Esc
+  useEffect(() => {
+    if (!open) return
+    function handler(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open])
+
+  // re-centraliza o mês ao valor mudar externamente (ex: início arrasta fim)
+  useEffect(() => {
+    if (value) setView(new Date(parse(value).getFullYear(), parse(value).getMonth(), 1))
+  }, [value])
+
+  function selectDay(d: Date) { onChange(iso(d)); setOpen(false) }
+
+  // constrói a grade: offset de segunda-feira + dias do mês + preenchimento final
+  const firstDay    = new Date(view.getFullYear(), view.getMonth(), 1)
+  const startOffset = (firstDay.getDay() + 6) % 7
+  const daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate()
+  const cells: Array<{ date: Date; outside: boolean }> = []
+  for (let i = 0; i < startOffset; i++)
+    cells.push({ date: addDays(firstDay, i - startOffset), outside: true })
+  for (let i = 1; i <= daysInMonth; i++)
+    cells.push({ date: new Date(view.getFullYear(), view.getMonth(), i), outside: false })
+  while (cells.length % 7 !== 0)
+    cells.push({ date: addDays(cells[cells.length - 1].date, 1), outside: true })
+
+  const tod    = today()
+  const display = selected
+    ? `${String(selected.getDate()).padStart(2,'0')}/${String(selected.getMonth()+1).padStart(2,'0')}/${selected.getFullYear()}`
+    : ''
+
+  return (
+    <div className="dp-wrap" ref={wrapRef}>
+      <button type="button" className="date-input dp-trigger"
+        aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open}
+        onClick={() => setOpen(o => !o)}>
+        {display || <span className="dp-placeholder">DD/MM/AAAA</span>}
+      </button>
+
+      {open && (
+        <div className="dp-popup" role="dialog" aria-label={`Calendário: ${ariaLabel}`}>
+          <div className="dp-nav">
+            <button type="button" className="icon-btn dp-arrow" aria-label="Mês anterior"
+              onClick={() => setView(v => new Date(v.getFullYear(), v.getMonth() - 1, 1))}>
+              <IconChevron dir="left" />
+            </button>
+            <span className="dp-month-label">
+              {MONTHS_LONG[view.getMonth()]} {view.getFullYear()}
+            </span>
+            <button type="button" className="icon-btn dp-arrow" aria-label="Próximo mês"
+              onClick={() => setView(v => new Date(v.getFullYear(), v.getMonth() + 1, 1))}>
+              <IconChevron dir="right" />
+            </button>
+          </div>
+
+          <div className="dp-grid">
+            {['seg','ter','qua','qui','sex','sáb','dom'].map(d => (
+              <span key={d} className="dp-wday">{d}</span>
+            ))}
+            {cells.map(({ date, outside }, i) => {
+              const isSelected = !!selected && iso(date) === iso(selected)
+              const isToday    = iso(date) === iso(tod)
+              return (
+                <button key={i} type="button"
+                  className={['dp-day', outside ? 'dp-outside' : '', isSelected ? 'dp-selected' : '', isToday && !isSelected ? 'dp-today' : ''].filter(Boolean).join(' ')}
+                  aria-label={`${date.getDate()} de ${MONTHS_LONG[date.getMonth()]} de ${date.getFullYear()}${isSelected ? ' (selecionado)' : ''}`}
+                  aria-pressed={isSelected}
+                  onClick={() => selectDay(date)}>
+                  {date.getDate()}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── botão de remoção em duas etapas ───────────────────────── */
 function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; confirmLabel: string; onConfirm: () => void }) {
   const [armed, setArmed] = useState(false)
@@ -106,33 +208,6 @@ function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; conf
       onClick={() => { if (armed) onConfirm(); else setArmed(true) }}>
       {armed ? confirmLabel : label}
     </button>
-  )
-}
-
-
-function DatePickerField({
-  value,
-  onChange,
-  ariaLabel,
-}: {
-  value: string
-  onChange: (isoDate: string) => void
-  ariaLabel: string
-}) {
-  return (
-    <DatePicker
-      selected={parse(value)}
-      onChange={(date: Date | null) => {
-        if (date) {
-          onChange(iso(date))
-        }
-      }}
-      dateFormat="dd/MM/yyyy"
-      locale={ptBR}
-      className="date-input"
-      showPopperArrow={false}
-      placeholderText="DD/MM/AAAA"
-    />
   )
 }
 
@@ -223,17 +298,9 @@ function PeriodCard({
           <EditableText className="period-name" value={period.name}
             onSave={v => onChange(p => ({ ...p, name: v }))} />
           <div className="period-dates">
-            <DatePickerField
-              value={period.start_date}
-              ariaLabel="Data de início"
-              onChange={setStartDate}
-            />
+            <CalendarPicker value={period.start_date} ariaLabel="Data de início" onChange={setStartDate} />
             <span className="date-sep">→</span>
-            <DatePickerField
-              value={period.end_date}
-              ariaLabel="Data de término"
-              onChange={setEndDate}
-            />
+            <CalendarPicker value={period.end_date} ariaLabel="Data de término" onChange={setEndDate} />
             <span className="period-meta">{totalDays} dias</span>
           </div>
         </div>
