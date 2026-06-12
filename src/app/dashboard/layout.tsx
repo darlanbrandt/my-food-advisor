@@ -27,7 +27,7 @@ function MoonIcon() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>('light')
   const router = useRouter()
 
   // Inicializa tema do localStorage
