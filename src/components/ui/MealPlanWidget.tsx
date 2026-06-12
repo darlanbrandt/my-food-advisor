@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import GoalsTab from '@/components/ui/GoalsTab'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 type Meal = { name: string; detail: string; tags: string[] }
@@ -15,6 +16,7 @@ export type PlanData = {
 /* ── constantes ─────────────────────────────────────────────── */
 const TABS = [
   { id: 'plan',     label: 'Plano semanal' },
+  { id: 'goals',    label: 'Metas' },
   { id: 'shopping', label: 'Lista de compras' },
   { id: 'subs',     label: 'Substituições' },
   { id: 'tips',     label: 'Dicas esofagite' },
@@ -370,6 +372,7 @@ export default function MealPlanWidget({
 
       <div className="tab-body" key={tab}>
         {tab === 'plan'     && <PlanTab days={plan.days} dayIdx={dayIdx} setDayIdx={setDayIdx} />}
+        {tab === 'goals'    && <GoalsTab />}
         {tab === 'shopping' && <ShoppingTab list={plan.shopping_list} />}
         {tab === 'subs'     && <SubsTab subs={plan.substitutions} />}
         {tab === 'tips'     && <TipsTab tips={plan.esophagitis_tips} />}
