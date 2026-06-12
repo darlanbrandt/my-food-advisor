@@ -26,63 +26,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--bg-base)',
-      padding: '24px',
-    }}>
-      <div className="fade-up" style={{ width: '100%', maxWidth: '360px' }}>
-        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-          <div style={{
-            width: 48, height: 48,
-            background: 'var(--accent-subtle)',
-            border: '1px solid var(--accent)',
-            borderRadius: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px',
-            fontSize: 22,
-          }}>⬡</div>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 28,
-            color: 'var(--text-primary)',
-            marginBottom: 6,
-          }}>Painel Pessoal</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-            Acesso restrito
-          </p>
+    <div className="login-wrap">
+      <form className="login-card" onSubmit={submit}>
+        <div className="wordmark" style={{ justifyContent: 'center', marginBottom: 'calc(8px * var(--sp))' }}>
+          <span className="wordmark-dot" />
+          <span className="wordmark-text">Food Advisor</span>
         </div>
+        <p className="login-sub">Painel pessoal</p>
 
-        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="password"
-            placeholder="Senha"
-            value={pw}
-            onChange={e => setPw(e.target.value)}
-            autoFocus
-            style={{
-              background: 'var(--bg-surface)',
-              border: `1px solid ${error ? '#d45b5b' : 'var(--border)'}`,
-              borderRadius: 8,
-              padding: '12px 14px',
-              color: 'var(--text-primary)',
-              fontSize: 15,
-              fontFamily: 'var(--font-body)',
-              outline: 'none',
-              transition: 'border-color .15s',
-            }}
-          />
-          {error && (
-            <p style={{ color: '#d45b5b', fontSize: 13 }}>{error}</p>
-          )}
-          <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: 4 }}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-      </div>
+        <label className="field-label" htmlFor="fa-pwd">Senha</label>
+        <input
+          id="fa-pwd"
+          className={`field-input${error ? ' error' : ''}`}
+          type="password"
+          autoComplete="current-password"
+          placeholder="••••••••"
+          value={pw}
+          onChange={e => setPw(e.target.value)}
+          autoFocus
+        />
+        {error && <p className="field-error">{error}</p>}
+
+        <button className="btn-primary login-btn" type="submit" disabled={loading}>
+          {loading ? <><span className="spinner" /> Entrando...</> : 'Entrar'}
+        </button>
+        <p className="login-foot">Acesso pessoal — só você entra aqui.</p>
+      </form>
     </div>
   )
 }

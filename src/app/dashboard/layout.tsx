@@ -1,127 +1,74 @@
 'use client'
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-const NAV = [
-  { href: '/dashboard', label: 'Plano alimentar', icon: '◈' },
-  // Adicione novas seções aqui futuramente:
-  // { href: '/dashboard/treino', label: 'Treino', icon: '◎' },
-  // { href: '/dashboard/medicamentos', label: 'Medicamentos', icon: '◇' },
-  // { href: '/dashboard/peso', label: 'Peso', icon: '◉' },
-]
+function SunIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="4.2" />
+      <line x1="12" y1="2.5" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="21.5" />
+      <line x1="2.5" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="21.5" y2="12" />
+      <line x1="5.3" y1="5.3" x2="7" y2="7" />
+      <line x1="17" y1="17" x2="18.7" y2="18.7" />
+      <line x1="5.3" y1="18.7" x2="7" y2="17" />
+      <line x1="17" y1="7" x2="18.7" y2="5.3" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" />
+    </svg>
+  )
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false)
-  const pathname = usePathname()
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const router = useRouter()
+
+  // Inicializa tema do localStorage
+  useEffect(() => {
+    const saved = (localStorage.getItem('fa_theme') as 'dark' | 'light') || 'dark'
+    setTheme(saved)
+    document.documentElement.dataset.theme = saved
+  }, [])
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    document.documentElement.dataset.theme = next
+    localStorage.setItem('fa_theme', next)
+  }
 
   async function logout() {
     await fetch('/api/auth', { method: 'DELETE' })
-    window.location.href = '/login'
+    router.push('/login')
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)' }}>
-      {/* Sidebar */}
-      <aside style={{
-        width: collapsed ? 60 : 220,
-        minHeight: '100vh',
-        background: 'var(--bg-surface)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'width .2s ease',
-        flexShrink: 0,
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-      }}>
-        {/* Logo */}
-        <div style={{
-          padding: collapsed ? '20px 0' : '20px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          borderBottom: '1px solid var(--border)',
-          justifyContent: collapsed ? 'center' : 'space-between',
-        }}>
-          {!collapsed && (
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--text-primary)' }}>
-              Painel
-            </span>
-          )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-tertiary)',
-              cursor: 'pointer',
-              fontSize: 16,
-              padding: 4,
-              borderRadius: 4,
-              lineHeight: 1,
-            }}
-            title={collapsed ? 'Expandir' : 'Recolher'}
-          >
-            {collapsed ? '›' : '‹'}
-          </button>
+    <div className="shell">
+      <header className="topbar">
+        <div className="wordmark">
+          <span className="wordmark-dot" />
+          <span className="wordmark-text">Food Advisor</span>
         </div>
-
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {NAV.map(item => {
-            const active = pathname === item.href
-            return (
-              <Link key={item.href} href={item.href} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: collapsed ? '10px 0' : '9px 10px',
-                borderRadius: 8,
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                textDecoration: 'none',
-                background: active ? 'var(--accent-subtle)' : 'transparent',
-                color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                fontSize: 14,
-                fontWeight: active ? 500 : 400,
-                transition: 'background .15s, color .15s',
-              }}>
-                <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
-                {!collapsed && item.label}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
+        <div className="topbar-actions">
           <button
-            onClick={logout}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: collapsed ? '10px 0' : '9px 10px',
-              borderRadius: 8,
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-tertiary)',
-              fontSize: 13,
-              cursor: 'pointer',
-              width: '100%',
-              transition: 'color .15s',
-            }}
+            className="icon-btn"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+            aria-label="Alternar tema"
           >
-            <span style={{ fontSize: 15 }}>→</span>
-            {!collapsed && 'Sair'}
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
+          <button className="link-btn" onClick={logout}>Sair</button>
         </div>
-      </aside>
-
-      {/* Conteúdo */}
-      <main style={{ flex: 1, overflow: 'auto', padding: '32px 28px' }}>
+      </header>
+      <main className="page">
         {children}
       </main>
     </div>
