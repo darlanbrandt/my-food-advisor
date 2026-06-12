@@ -122,14 +122,16 @@ function DatePickerField({
   return (
     <DatePicker
       selected={parse(value)}
-      onChange={date => {
-        if (date) onChange(iso(date as Date))
+      onChange={(date: Date | null) => {
+        if (date) {
+          onChange(iso(date))
+        }
       }}
       dateFormat="dd/MM/yyyy"
       locale={ptBR}
-      ariaLabelledBy={ariaLabel}
       className="date-input"
       showPopperArrow={false}
+      placeholderText="DD/MM/AAAA"
     />
   )
 }
