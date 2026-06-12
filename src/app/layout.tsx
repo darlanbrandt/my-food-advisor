@@ -21,7 +21,7 @@ const themeScript = `(function(){try{var t=localStorage.getItem('fa_theme');if(t
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" data-theme="dark" className={instrumentSans.variable} suppressHydrationWarning>
+    <html lang="pt-BR" data-theme="light" className={instrumentSans.variable} suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
