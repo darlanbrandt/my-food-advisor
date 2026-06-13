@@ -583,7 +583,10 @@ export default function MealPlanWidget({
       <div className="tab-body" key={tab}>
         {tab === 'plan'     && <PlanTab days={plan.days} dayIdx={dayIdx} setDayIdx={setDayIdx} />}
         {tab === 'goals'    && <GoalsTab />}
-        {tab === 'prep'     && plan.prep_guide && <PrepTab guide={plan.prep_guide} />}
+        {tab === 'prep'     && (plan.prep_guide
+          ? <PrepTab guide={plan.prep_guide} />
+          : <div className="goals-empty"><p>Nenhum guia de preparação neste plano.</p><p style={{ fontSize: 12, marginTop: 4 }}>Atualize o plano com um JSON que contenha o campo <code>prep_guide</code>.</p></div>
+        )}
         {tab === 'shopping' && <ShoppingTab list={plan.shopping_list} />}
         {tab === 'subs'     && <SubsTab subs={plan.substitutions} />}
         {tab === 'tips'     && <TipsTab tips={plan.esophagitis_tips} />}
