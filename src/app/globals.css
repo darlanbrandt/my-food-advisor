@@ -660,7 +660,7 @@ button { font-family: var(--font-ui); }
 .dp-selected:hover { filter: brightness(1.08); }
 
 /* date picker nativo segue o tema */
-html { color-scheme: light; }
+html { color-scheme: light; scrollbar-gutter: stable; }
 [data-theme="dark"] { color-scheme: dark; }
 
 /* ── Badge ───────────────────────────────────────────────── */
