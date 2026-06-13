@@ -1,15 +1,16 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import GoalsTab from '@/components/ui/GoalsTab'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 type Meal = { name: string; detail: string; tags: string[] }
 type Day  = { day: string; meals: Record<string, Meal> }
 
-type Dressing = { name: string; ingredients: string; method: string; note: string }
-type BatchPhase = { phase: string; time: string; tasks: string[] }
-type WeekdayTip = { meal: string; time: string; tip: string }
+type Dressing    = { name: string; ingredients: string; method: string; note: string }
+type BatchPhase  = { phase: string; time: string; tasks: string[] }
+type WeekdayTip  = { meal: string; time: string; tip: string }
 type FreezingItem = { item: string; freeze: boolean; tip: string }
-type LegWeek = { week: string; plan: string; note: string }
+type LegWeek     = { week: string; plan: string; note: string }
 
 export type PlanData = {
   meta?: { id: number; created_at: string; label: string }
@@ -30,6 +31,7 @@ export type PlanData = {
 /* ── constantes ─────────────────────────────────────────────── */
 const TABS = [
   { id: 'plan',     label: 'Plano semanal' },
+  { id: 'goals',    label: 'Metas' },
   { id: 'prep',     label: 'Preparação' },
   { id: 'shopping', label: 'Lista de compras' },
   { id: 'subs',     label: 'Substituições' },
@@ -43,6 +45,7 @@ const MEAL_LABELS: Record<string, string> = {
   dinner:          'Jantar',
 }
 
+// janelas em horas decimais
 const MEAL_WINDOWS: Record<string, [number, number]> = {
   morning_snack:   [9.5,  11],
   lunch:           [12,   13.5],
@@ -57,14 +60,15 @@ const TAG_COLOR: Record<string, string> = {
 }
 
 const SUB_BADGE: Record<string, { color: string; label: string }> = {
-  'manter':      { color: 'var(--c-blue)',       label: 'Manter' },
-  'não aplica':  { color: 'var(--text-tertiary)', label: 'Não se aplica' },
-  'custo':       { color: 'var(--c-red)',         label: 'Custo alto' },
-  'swap':        { color: 'var(--accent-ink)',    label: 'Ativo no plano' },
+  'manter':      { color: 'var(--c-blue)',      label: 'Manter' },
+  'não aplica':  { color: 'var(--text-tertiary)',label: 'Não se aplica' },
+  'custo':       { color: 'var(--c-red)',        label: 'Custo alto' },
+  'swap':        { color: 'var(--accent-ink)',   label: 'Ativo no plano' },
 }
 
 function todayIndex() { return (new Date().getDay() + 6) % 7 }
 
+/* ── hook: refeição atual ───────────────────────────────────── */
 function useMealStatus() {
   return useMemo(() => {
     const now = new Date()
@@ -86,6 +90,7 @@ function PlanTab({ days, dayIdx, setDayIdx }: { days: Day[]; dayIdx: number; set
   const status = useMealStatus()
   const today  = todayIndex()
   const day    = days[dayIdx]
+
   return (
     <div>
       <p className="schedule-note">
@@ -93,9 +98,13 @@ function PlanTab({ days, dayIdx, setDayIdx }: { days: Day[]; dayIdx: number; set
       </p>
       <div className="day-nav" role="tablist">
         {days.map((d, i) => (
-          <button key={d.day} role="tab" aria-selected={i === dayIdx}
+          <button
+            key={d.day}
+            role="tab"
+            aria-selected={i === dayIdx}
             className={`day-pill${i === dayIdx ? ' active' : ''}`}
-            onClick={() => setDayIdx(i)}>
+            onClick={() => setDayIdx(i)}
+          >
             {d.day.slice(0, 3)}
             {i === today && <span className="today-dot" title="hoje" />}
           </button>
@@ -332,6 +341,7 @@ function ShoppingTab({ list }: { list: Record<string, string[]> }) {
     if (typeof window === 'undefined') return {}
     try { return JSON.parse(localStorage.getItem('fa_checks') || '{}') } catch { return {} }
   })
+
   function toggle(id: string) {
     setChecked(prev => {
       const next = { ...prev, [id]: !prev[id] }
@@ -339,6 +349,7 @@ function ShoppingTab({ list }: { list: Record<string, string[]> }) {
       return next
     })
   }
+
   return (
     <div className="stack">
       {Object.entries(list).map(([category, items]) => {
@@ -350,7 +361,7 @@ function ShoppingTab({ list }: { list: Record<string, string[]> }) {
               <span className="list-count">{done}/{items.length}</span>
             </header>
             {items.map((item, i) => {
-              const id = `${category}/${i}`
+              const id   = `${category}/${i}`
               const isOn = !!checked[id]
               return (
                 <label key={id} className={`check-row${isOn ? ' done' : ''}`}>
@@ -427,6 +438,7 @@ function UpdateModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
+  // fechar com Esc
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -469,19 +481,41 @@ function UpdateModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Fechar">
             <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <line x1="2" y1="2" x2="12" y2="12" /><line x1="12" y1="2" x2="2" y2="12" />
+              <line x1="2" y1="2" x2="12" y2="12" />
+              <line x1="12" y1="2" x2="2" y2="12" />
             </svg>
           </button>
         </header>
+
         <div className="modal-field">
-          <label className="field-label" htmlFor="fa-label">Nome do plano <span className="muted">(opcional)</span></label>
-          <input id="fa-label" className="field-input" type="text" placeholder="ex: Semana 25 — jun. de 2026" value={label} onChange={e => setLabel(e.target.value)} />
+          <label className="field-label" htmlFor="fa-label">
+            Nome do plano <span className="muted">(opcional)</span>
+          </label>
+          <input
+            id="fa-label"
+            className="field-input"
+            type="text"
+            placeholder="ex: Semana 25 — jun. de 2026"
+            value={label}
+            onChange={e => setLabel(e.target.value)}
+          />
         </div>
+
         <div className="modal-field">
-          <label className="field-label" htmlFor="fa-json">JSON do plano <span className="req">*</span></label>
-          <textarea id="fa-json" className={`field-input mono${error ? ' error' : ''}`} rows={10} placeholder="Cole o JSON aqui..." value={json} onChange={e => setJson(e.target.value)} />
+          <label className="field-label" htmlFor="fa-json">
+            JSON do plano <span className="req">*</span>
+          </label>
+          <textarea
+            id="fa-json"
+            className={`field-input mono${error ? ' error' : ''}`}
+            rows={10}
+            placeholder="Cole o JSON aqui..."
+            value={json}
+            onChange={e => setJson(e.target.value)}
+          />
           {error && <p className="field-error">{error}</p>}
         </div>
+
         <footer className="modal-foot">
           <button className="btn-ghost" onClick={onClose} disabled={loading}>Cancelar</button>
           <button className="btn-primary" onClick={submit} disabled={loading || !json.trim()}>
@@ -496,7 +530,11 @@ function UpdateModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
 
 /* ── widget principal ───────────────────────────────────────── */
 export default function MealPlanWidget({
-  plan, onUpdateClick, showModal, onModalClose, onModalSuccess,
+  plan,
+  onUpdateClick,
+  showModal,
+  onModalClose,
+  onModalSuccess,
 }: {
   plan: PlanData
   onUpdateClick: () => void
@@ -516,19 +554,27 @@ export default function MealPlanWidget({
 
   return (
     <>
+      {/* Cabeçalho da página */}
       <div className="page-head" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 className="page-title">Plano alimentar</h1>
           <p className="page-sub">{plan.meta?.label ?? 'Personalizado — Amanda Ferreira Estephan'}</p>
         </div>
-        <button className="btn-primary" onClick={onUpdateClick}>Atualizar plano</button>
+        <button className="btn-primary" onClick={onUpdateClick}>
+          Atualizar plano
+        </button>
       </div>
 
+      {/* Abas */}
       <nav className="tabset" role="tablist" aria-label="Seções">
         {TABS.map(t => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id}
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
             className={`tab-btn${tab === t.id ? ' active' : ''}`}
-            onClick={() => setTab(t.id)}>
+            onClick={() => setTab(t.id)}
+          >
             {t.label}
           </button>
         ))}
@@ -536,13 +582,20 @@ export default function MealPlanWidget({
 
       <div className="tab-body" key={tab}>
         {tab === 'plan'     && <PlanTab days={plan.days} dayIdx={dayIdx} setDayIdx={setDayIdx} />}
+        {tab === 'goals'    && <GoalsTab />}
         {tab === 'prep'     && plan.prep_guide && <PrepTab guide={plan.prep_guide} />}
         {tab === 'shopping' && <ShoppingTab list={plan.shopping_list} />}
         {tab === 'subs'     && <SubsTab subs={plan.substitutions} />}
         {tab === 'tips'     && <TipsTab tips={plan.esophagitis_tips} />}
       </div>
 
-      {showModal && <UpdateModal onClose={onModalClose} onSuccess={handleSuccess} />}
+      {showModal && (
+        <UpdateModal
+          onClose={onModalClose}
+          onSuccess={handleSuccess}
+        />
+      )}
+
       {toast && <div className="toast">{toast}</div>}
     </>
   )
