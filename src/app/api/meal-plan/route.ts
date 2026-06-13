@@ -101,11 +101,25 @@ function getWeekNumber(date: Date) {
 
 type Meal = { name: string; detail: string; tags: string[] }
 type Day = { day: string; meals: Record<string, Meal> }
+type Dressing   = { name: string; ingredients: string; method: string; note: string }
+type BatchPhase = { phase: string; time: string; tasks: string[] }
+type WeekdayTip = { meal: string; time: string; tip: string }
+type FreezingItem = { item: string; freeze: boolean; tip: string }
+type LegWeek    = { week: string; plan: string; note: string }
+
 type PlanData = {
   days: Day[]
   shopping_list?: Record<string, string[]>
   substitutions?: Array<{ status: string; title: string; body: string }>
   esophagitis_tips?: { avoid: string[]; habits: string[]; lactose: string[] }
+  prep_guide?: {
+    intro: string
+    dressings: Dressing[]
+    batch_sunday: { total_time: string; phases: BatchPhase[] }
+    weekday_tips: WeekdayTip[]
+    freezing_guide: FreezingItem[]
+    legume_rotation: { description: string; weeks: LegWeek[] }
+  }
 }
 
 // Limites defensivos para evitar persistir payloads abusivos
@@ -193,6 +207,81 @@ function validatePlan(body: Record<string, unknown>): ValidationResult {
       return { ok: false, error: 'JSON inválido — "esophagitis_tips" malformado.' }
     }
     plan.esophagitis_tips = { avoid: t.avoid, habits: t.habits, lactose: t.lactose }
+  }
+
+  // prep_guide — opcional
+  if (body.prep_guide !== undefined) {
+    const g = body.prep_guide
+    if (!isRecord(g) || typeof g.intro !== 'string') {
+      return { ok: false, error: 'JSON inválido — "prep_guide" malformado.' }
+    }
+
+    const dressings: Dressing[] = []
+    if (Array.isArray(g.dressings)) {
+      for (const d of g.dressings) {
+        if (!isRecord(d) || typeof d.name !== 'string' || typeof d.ingredients !== 'string' || typeof d.method !== 'string' || typeof d.note !== 'string') {
+          return { ok: false, error: 'JSON inválido — "prep_guide.dressings" malformado.' }
+        }
+        dressings.push({ name: d.name, ingredients: d.ingredients, method: d.method, note: d.note })
+      }
+    }
+
+    const phases: BatchPhase[] = []
+    const bs = g.batch_sunday
+    if (!isRecord(bs) || typeof bs.total_time !== 'string') {
+      return { ok: false, error: 'JSON inválido — "prep_guide.batch_sunday" malformado.' }
+    }
+    if (Array.isArray(bs.phases)) {
+      for (const p of bs.phases) {
+        if (!isRecord(p) || typeof p.phase !== 'string' || typeof p.time !== 'string' || !isStringArray(p.tasks)) {
+          return { ok: false, error: 'JSON inválido — "prep_guide.batch_sunday.phases" malformado.' }
+        }
+        phases.push({ phase: p.phase, time: p.time, tasks: p.tasks })
+      }
+    }
+
+    const weekday_tips: WeekdayTip[] = []
+    if (Array.isArray(g.weekday_tips)) {
+      for (const t of g.weekday_tips) {
+        if (!isRecord(t) || typeof t.meal !== 'string' || typeof t.time !== 'string' || typeof t.tip !== 'string') {
+          return { ok: false, error: 'JSON inválido — "prep_guide.weekday_tips" malformado.' }
+        }
+        weekday_tips.push({ meal: t.meal, time: t.time, tip: t.tip })
+      }
+    }
+
+    const freezing_guide: FreezingItem[] = []
+    if (Array.isArray(g.freezing_guide)) {
+      for (const f of g.freezing_guide) {
+        if (!isRecord(f) || typeof f.item !== 'string' || typeof f.freeze !== 'boolean' || typeof f.tip !== 'string') {
+          return { ok: false, error: 'JSON inválido — "prep_guide.freezing_guide" malformado.' }
+        }
+        freezing_guide.push({ item: f.item, freeze: f.freeze, tip: f.tip })
+      }
+    }
+
+    const lr = g.legume_rotation
+    if (!isRecord(lr) || typeof lr.description !== 'string') {
+      return { ok: false, error: 'JSON inválido — "prep_guide.legume_rotation" malformado.' }
+    }
+    const weeks: LegWeek[] = []
+    if (Array.isArray(lr.weeks)) {
+      for (const w of lr.weeks) {
+        if (!isRecord(w) || typeof w.week !== 'string' || typeof w.plan !== 'string' || typeof w.note !== 'string') {
+          return { ok: false, error: 'JSON inválido — "prep_guide.legume_rotation.weeks" malformado.' }
+        }
+        weeks.push({ week: w.week, plan: w.plan, note: w.note })
+      }
+    }
+
+    plan.prep_guide = {
+      intro: g.intro,
+      dressings,
+      batch_sunday: { total_time: bs.total_time, phases },
+      weekday_tips,
+      freezing_guide,
+      legume_rotation: { description: lr.description, weeks },
+    }
   }
 
   return { ok: true, plan }
