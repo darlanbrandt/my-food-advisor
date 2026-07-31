@@ -1,6 +1,7 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Instrument_Sans } from 'next/font/google'
 import './globals.css'
+import RegisterSW from '@/components/pwa/RegisterSW'
 
 // Auto-hospedada pelo Next no build — sem requisição a terceiros em runtime
 const instrumentSans = Instrument_Sans({
@@ -13,6 +14,30 @@ const instrumentSans = Instrument_Sans({
 export const metadata: Metadata = {
   title: 'Food Advisor',
   description: 'Painel pessoal de alimentação',
+  applicationName: 'Food Advisor',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Food Advisor',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fbfaf8' },
+    { media: '(prefers-color-scheme: dark)',  color: '#141413' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 // Aplica o tema salvo antes da primeira pintura, evitando flash de tema
@@ -25,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
+        <RegisterSW />
       </body>
     </html>
   )

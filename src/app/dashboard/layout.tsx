@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import InstallButton from '@/components/pwa/InstallButton'
 
 function SunIcon() {
   return (
@@ -57,6 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="wordmark-text">Food Advisor</span>
         </div>
         <div className="topbar-actions">
+          <InstallButton />
           <button
             className="icon-btn"
             onClick={toggleTheme}
