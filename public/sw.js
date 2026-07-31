@@ -46,6 +46,7 @@ self.addEventListener('fetch', (event) => {
   if (isStatic) {
     event.respondWith(caches.open(STATIC).then(async (cache) => {
       const cached = await cache.match(request)
+      //noaikido SSRF false positive: same-origin is enforced by the url.origin guard above, and a service worker runs client-side in the browser — it cannot be a server-side request forgery vector
       const network = fetch(request)
         .then((res) => { if (res && res.ok) cache.put(request, res.clone()); return res })
         .catch(() => cached)
@@ -58,6 +59,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
+        //noaikido SSRF false positive: same-origin is enforced by the url.origin guard above, and a service worker runs client-side in the browser — it cannot be a server-side request forgery vector
         const res = await fetch(request)
         const cache = await caches.open(PAGES)
         cache.put(request, res.clone())
