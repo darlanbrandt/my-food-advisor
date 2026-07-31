@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 
 // GET /api/meal-plan — retorna o plano ativo
 export async function GET() {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('meal_plans')
     .select('id, created_at, label, plan_data')
@@ -25,6 +26,7 @@ export async function GET() {
 
 // POST /api/meal-plan — salva novo plano enviado como JSON
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   try {
     let body: unknown
     try {
@@ -67,6 +69,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/meal-plan — renomeia ou restaura plano antigo
 export async function PATCH(req: NextRequest) {
+  const supabase = getSupabase()
   const body = await req.json()
 
   if (body.label !== undefined) {

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 type Goal = { id: string; name: string }
@@ -67,6 +67,7 @@ function validatePeriod(body: Record<string, unknown>): { ok: true; data: Period
 
 /* ── GET /api/goals ─────────────────────────────────────────── */
 export async function GET() {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('goal_periods')
     .select('*')
@@ -78,6 +79,7 @@ export async function GET() {
 
 /* ── POST /api/goals — cria novo período ────────────────────── */
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   let body: unknown
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 })
@@ -103,6 +105,7 @@ export async function POST(req: NextRequest) {
 
 /* ── PATCH /api/goals — atualiza período existente ─────────── */
 export async function PATCH(req: NextRequest) {
+  const supabase = getSupabase()
   let body: unknown
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 })
@@ -169,6 +172,7 @@ export async function PATCH(req: NextRequest) {
 
 /* ── DELETE /api/goals — remove período ─────────────────────── */
 export async function DELETE(req: NextRequest) {
+  const supabase = getSupabase()
   let body: unknown
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 })
