@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'
 
 const PUBLIC_PATHS = ['/login', '/api/auth']
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {

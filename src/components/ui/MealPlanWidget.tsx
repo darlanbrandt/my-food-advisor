@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import GoalsTab from '@/components/ui/GoalsTab'
+import WeightTab from '@/components/ui/WeightTab'
 
 /* ── tipos ─────────────────────────────────────────────────── */
 type Meal = { name: string; detail: string; tags: string[] }
@@ -32,6 +33,7 @@ export type PlanData = {
 const TABS = [
   { id: 'plan',     label: 'Plano semanal' },
   { id: 'goals',    label: 'Metas' },
+  { id: 'weight',   label: 'Peso' },
   { id: 'prep',     label: 'Preparação' },
   { id: 'shopping', label: 'Lista de compras' },
   { id: 'subs',     label: 'Substituições' },
@@ -583,6 +585,7 @@ export default function MealPlanWidget({
       <div className="tab-body" key={tab}>
         {tab === 'plan'     && <PlanTab days={plan.days} dayIdx={dayIdx} setDayIdx={setDayIdx} />}
         {tab === 'goals'    && <GoalsTab />}
+        {tab === 'weight'   && <WeightTab />}
         {tab === 'prep'     && (plan.prep_guide
           ? <PrepTab guide={plan.prep_guide} />
           : <div className="goals-empty"><p>Nenhum guia de preparação neste plano.</p><p style={{ fontSize: 12, marginTop: 4 }}>Atualize o plano com um JSON que contenha o campo <code>prep_guide</code>.</p></div>
